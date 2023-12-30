@@ -3,7 +3,7 @@ import random
 import sys
 import os
 import math
-
+# Цели Колизия пуль
 x_pos = 0
 y_pos = 0
 step = 10
@@ -15,6 +15,8 @@ pygame.init()
 size = width, height = 800, 400
 screen = pygame.display.set_mode(size)
 all_sprites = pygame.sprite.Group()
+enemy_sprites = pygame.sprite.Group()
+bullet_sprites = pygame.sprite.Group()
 
 def load_image(name, colorkey=None):
 
@@ -35,22 +37,19 @@ def load_image(name, colorkey=None):
 
 class Enemy(pygame.sprite.Sprite):
     image = load_image("2F3136.png")
-    image_boom = load_image("2F3136.png")
     def __init__(self, x=0, y=0, *group):
         self.step = 5
-        self.size = 100
+        self.size = self.image.get_size()[0]
         self.y = y
         self.x = x
         self.last = self.x, self.y
         super().__init__(*group)
         self.image = Enemy.image
         self.rect = self.image.get_rect()
-
-    def move(self):
+    def update(self, *args, **kwargs):
         self.rect.x = self.x - self.size / 2 - x_pos
         self.rect.y = self.y - self.size / 2 - y_pos
-        #нельзя давать меняться self.x и y когда они застыли Создать еще переменную для фиксации?
-        #место колизии я попробую расчитывать на то что фон будет серым, а враги яркими, за счет этого при выстреле например из пули когда её цвет меняется(наложением) мы отнимаем хп
+
         v = (((200 - self.y + y_pos) ** 2 + (self.x - 400 - x_pos) ** 2) ** 0.5)
         cos = (self.x - 400 - x_pos) / v
         sin = (200 - self.y + y_pos) / v
@@ -63,17 +62,52 @@ class Enemy(pygame.sprite.Sprite):
 #        sin = (200 - self.y + y_pos) / v
 # более плавное движение. ускорение чем дальше, чем ближе замедление
 # pygame.draw.lines(screen, color='blue', closed=True, points=((self.x - x_pos, self.y - y_pos), (400, 200)))
+
+#Можно сделать наследуемый класс Bullet, Laser и т.д?
+class Bullet_type_1(pygame.sprite.Sprite):
+    image = load_image("bullet.png")
+    def __init__(self, x=400, y=200, *group):
+        self.step = 5
+        self.size = self.image.get_rect()[0]
+        super().__init__(*group)
+        self.image = Bullet_type_1.image
+        self.rect = self.image.get_rect()
+        self.x, self.y = x + x_pos, y + y_pos
+#vector settings
+        self.mcoord = pygame.mouse.get_pos()
+        v = (((self.mcoord[1] - 200) ** 2 + (self.mcoord[0] - 400) ** 2) ** 0.5)
+        cos = (self.mcoord[0] - 400) / v
+        sin = (self.mcoord[1] - 200) / v
+        self.vx = cos * step
+        self.vy = sin * step
+
+
+    def update(self, *args, **kwargs):
+        self.rect.x = self.x - self.size - x_pos
+        self.rect.y = self.y - self.size - y_pos
+        self.x += self.vx
+        self.y += self.vy
+        if pygame.sprite.spritecollideany(self, enemy_sprites):
+            bullet_sprites.remove(self)
+
+        print(self.vy)
+        pygame.draw.lines(screen, color='green', closed=True, points=((self.x - x_pos, self.y - y_pos), (400, 200)))
+
 class Player():
     def __init__(self):
         pass
+
+    def bullet_spawn(self, type=Bullet_type_1):
+        type(400, 200, bullet_sprites)
+
 class Gamerulers():
     def __init__(self):
         pass
 
     def spawn(self, x):
-        sp = []
         for i in range(x):
-            sp.append(Enemy(800, (random.randrange(0, 400)), all_sprites))
+            Enemy(800, (random.randrange(0, 400)), all_sprites, enemy_sprites)
+            c = 0
             if c == 1:
                 pass
             if c == 2:
@@ -83,10 +117,6 @@ class Gamerulers():
             if c == 4:
                 pass
 
-        return sp
-
-
-c = Enemy(500, 100)
 
 if __name__ == '__main__':
     running = True
@@ -115,15 +145,16 @@ if __name__ == '__main__':
                 if pygame.key.get_pressed()[115]:
                     y_pos += step
             if event.type == MYEVENTTYPE:
-                sp += (Gamerulers().spawn(1))
+                Gamerulers().spawn(1)
+                Player().bullet_spawn()
 
             # при закрытии окна
             if event.type == pygame.QUIT:
                 running = False
-        print(sp)
-        [i.move() for i in sp]
+        enemy_sprites.update()
+        bullet_sprites.update()
         all_sprites.draw(screen)
-
+        bullet_sprites.draw(screen)
 
         # отрисовка и изменение свойств объектов
         # ...
@@ -131,3 +162,4 @@ if __name__ == '__main__':
         # обновление экрана
         pygame.display.flip()
     pygame.quit()
+
