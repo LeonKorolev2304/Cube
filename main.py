@@ -42,6 +42,7 @@ class Enemy(pygame.sprite.Sprite):
         self.size = self.image.get_size()[0]
         self.y = y
         self.x = x
+        self.hp = 3
         self.last = self.x, self.y
         super().__init__(*group)
         self.image = Enemy.image
@@ -56,6 +57,11 @@ class Enemy(pygame.sprite.Sprite):
         pygame.draw.lines(screen, color='blue', closed=True, points=((self.x - x_pos, self.y - y_pos), (400, 200)))
         self.x = self.x - cos * self.step
         self.y = self.y + sin * self.step
+        if pygame.sprite.spritecollide(self, bullet_sprites, True):
+            self.hp -= 1
+            print(self.hp)
+        if self.hp == 0:
+            enemy_sprites.remove(self)
 
 #        v = (((200 - self.y + y_pos) ** 2 + (self.x - 400 - x_pos) ** 2) ** 0.5)
 #        cos = (self.x - 400 - x_pos) / v
@@ -87,11 +93,8 @@ class Bullet_type_1(pygame.sprite.Sprite):
         self.rect.y = self.y - self.size - y_pos
         self.x += self.vx
         self.y += self.vy
-        if pygame.sprite.spritecollideany(self, enemy_sprites):
-            bullet_sprites.remove(self)
-
-        print(self.vy)
         pygame.draw.lines(screen, color='green', closed=True, points=((self.x - x_pos, self.y - y_pos), (400, 200)))
+
 
 class Player():
     def __init__(self):
@@ -106,7 +109,7 @@ class Gamerulers():
 
     def spawn(self, x):
         for i in range(x):
-            Enemy(800, (random.randrange(0, 400)), all_sprites, enemy_sprites)
+            Enemy(800, (random.randrange(0, 400)), enemy_sprites)
             c = 0
             if c == 1:
                 pass
@@ -151,10 +154,14 @@ if __name__ == '__main__':
             # при закрытии окна
             if event.type == pygame.QUIT:
                 running = False
+
         enemy_sprites.update()
         bullet_sprites.update()
         all_sprites.draw(screen)
+        enemy_sprites.draw(screen)
         bullet_sprites.draw(screen)
+
+    #короче когда мы пулькой попадаем то не удаляется из all sprites так что пока что оно класс пулек и врагов не принадлежит all sprites
 
         # отрисовка и изменение свойств объектов
         # ...
@@ -162,4 +169,5 @@ if __name__ == '__main__':
         # обновление экрана
         pygame.display.flip()
     pygame.quit()
+
 
