@@ -2,7 +2,11 @@ import pygame
 import random
 import sys
 import os
+import asyncio
+import threading
 import math
+import time
+
 # Цели Колизия пуль
 x_pos = 0
 y_pos = 0
@@ -17,6 +21,7 @@ screen = pygame.display.set_mode(size)
 all_sprites = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
 bullet_sprites = pygame.sprite.Group()
+Player_sprite = pygame.sprite.Group()
 
 def load_image(name, colorkey=None):
 
@@ -43,7 +48,6 @@ class Enemy(pygame.sprite.Sprite):
         self.y = y
         self.x = x
         self.hp = 3
-        self.last = self.x, self.y
         super().__init__(*group)
         self.image = Enemy.image
         self.rect = self.image.get_rect()
@@ -57,10 +61,7 @@ class Enemy(pygame.sprite.Sprite):
         pygame.draw.lines(screen, color='blue', closed=True, points=((self.x - x_pos, self.y - y_pos), (400, 200)))
         self.x = self.x - cos * self.step
         self.y = self.y + sin * self.step
-        if pygame.sprite.spritecollide(self, bullet_sprites, True):
-            self.hp -= 1
-            print(self.hp)
-        if self.hp == 0:
+        if self.hp <= 0:
             enemy_sprites.remove(self)
 
 #        v = (((200 - self.y + y_pos) ** 2 + (self.x - 400 - x_pos) ** 2) ** 0.5)
@@ -70,13 +71,21 @@ class Enemy(pygame.sprite.Sprite):
 # pygame.draw.lines(screen, color='blue', closed=True, points=((self.x - x_pos, self.y - y_pos), (400, 200)))
 
 #Можно сделать наследуемый класс Bullet, Laser и т.д?
-class Bullet_type_1(pygame.sprite.Sprite):
+#Добавим пуле промежуток времени через который она может наносить урон
+
+class Bullet_type_standart(pygame.sprite.Sprite):
     image = load_image("bullet.png")
     def __init__(self, x=400, y=200, *group):
+        #Таймерa, для класса bullet thought
+        self.thread = threading.Timer(1.5, Bullet_type_standart.wait_time(self))
+        self.timedamage = 2
+        self.damagemoment = True
+
+
         self.step = 5
         self.size = self.image.get_rect()[0]
         super().__init__(*group)
-        self.image = Bullet_type_1.image
+        self.image = Bullet_type_standart.image
         self.rect = self.image.get_rect()
         self.x, self.y = x + x_pos, y + y_pos
 #vector settings
@@ -87,21 +96,63 @@ class Bullet_type_1(pygame.sprite.Sprite):
         self.vx = cos * step
         self.vy = sin * step
 
+    def wait_time(self):
+        self.damagemoment = True
 
     def update(self, *args, **kwargs):
+        detected = pygame.sprite.spritecollideany(self, enemy_sprites)
+        print(detected)
+
         self.rect.x = self.x - self.size - x_pos
         self.rect.y = self.y - self.size - y_pos
         self.x += self.vx
         self.y += self.vy
         pygame.draw.lines(screen, color='green', closed=True, points=((self.x - x_pos, self.y - y_pos), (400, 200)))
 
+        if detected != None:
+            detected.hp -= 1
+            bullet_sprites.remove(self)
+class Bullet_through(Bullet_type_standart):
+    def update(self, *args, **kwargs):
+        detected = pygame.sprite.spritecollideany(self, enemy_sprites)
+        print(detected)
 
-class Player():
-    def __init__(self):
-        pass
+        self.rect.x = self.x - self.size - x_pos
+        self.rect.y = self.y - self.size - y_pos
+        self.x += self.vx
+        self.y += self.vy
+        pygame.draw.lines(screen, color='green', closed=True, points=((self.x - x_pos, self.y - y_pos), (400, 200)))
 
-    def bullet_spawn(self, type=Bullet_type_1):
+        if detected != None and self.damagemoment == True:
+            detected.hp -= 1
+            self.damagemoment = False
+        if self.damagemoment == False and self.thread.is_alive() and detected != None:
+            print('----------')
+            print(self.thread.is_alive())
+            self.thread.start()
+
+
+class Player(pygame.sprite.Sprite):
+    image = load_image("ff.png")
+    def __init__(self, *group):
+        self.hp = 3
+        super().__init__(*group)
+        self.image = Player.image
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.x = 400 - self.image.get_size()[0] / 2
+        self.rect.y = 200 - self.image.get_size()[0] / 2
+
+    def bullet_spawn(self, type=Bullet_type_standart):
         type(400, 200, bullet_sprites)
+
+    def update(self, *args, **kwargs):
+        if pygame.sprite.spritecollide(self, enemy_sprites, True):
+            self.hp -= 1
+        if self.hp == 0:
+            pass
+            #финальный экран
+
 
 class Gamerulers():
     def __init__(self):
@@ -123,14 +174,13 @@ class Gamerulers():
 
 if __name__ == '__main__':
     running = True
-
+    MainPerson = Player(all_sprites)
     MYEVENTTYPE = pygame.USEREVENT + 1
     pygame.time.set_timer(MYEVENTTYPE, 1000)
 
     while running:
         clock.tick(30)
         screen.fill((0, 0, 0))
-        pygame.draw.circle(screen, (255, 0, 0), (400, 200), 20)
 
         # внутри игрового цикла ещё один цикл
         # приема и обработки сообщений
@@ -138,6 +188,7 @@ if __name__ == '__main__':
        #     if event != []:
                 #print(event.dict)
                 #print(pygame.key.get_pressed()[119])
+    #cделать это в player?
             if pygame.key.get_focused() and event.type == pygame.TEXTINPUT:
                 if pygame.key.get_pressed()[119]:
                     y_pos -= step
@@ -149,7 +200,7 @@ if __name__ == '__main__':
                     y_pos += step
             if event.type == MYEVENTTYPE:
                 Gamerulers().spawn(1)
-                Player().bullet_spawn()
+                MainPerson.bullet_spawn()
 
             # при закрытии окна
             if event.type == pygame.QUIT:
@@ -157,9 +208,12 @@ if __name__ == '__main__':
 
         enemy_sprites.update()
         bullet_sprites.update()
+        MainPerson.update()
+        
         all_sprites.draw(screen)
         enemy_sprites.draw(screen)
         bullet_sprites.draw(screen)
+        Player_sprite.draw(screen)
 
     #короче когда мы пулькой попадаем то не удаляется из all sprites так что пока что оно класс пулек и врагов не принадлежит all sprites
 
@@ -169,5 +223,4 @@ if __name__ == '__main__':
         # обновление экрана
         pygame.display.flip()
     pygame.quit()
-
 
