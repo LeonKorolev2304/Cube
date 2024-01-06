@@ -40,6 +40,8 @@ def load_image(name, colorkey=None):
         image = image.convert_alpha()
     return image
 
+
+
 class Enemy(pygame.sprite.Sprite):
     image = load_image("2F3136.png")
     def __init__(self, x=0, y=0, *group):
@@ -72,7 +74,8 @@ class Enemy_distant(Enemy):
     def __init__(self, x, y, *group):
         super().__init__(x, y, *group)
         self.distance = 200
-        self.thread = threading.Timer(2.0, Bullet_type_standart.wait_time, args=self)
+        self.timer = 2.0
+        self.thread = threading.Timer(self.timer, self.__class__.wait_time, args=self)
 
     def update(self, *args, **kwargs):
         self.rect.x = self.x - self.size / 2 - x_pos
@@ -85,16 +88,16 @@ class Enemy_distant(Enemy):
             self.y = self.y + sin * self.step
         else:
             if not self.thread.is_alive():
-                self.thread = threading.Timer(2.0, Enemy_distant.wait_time, args=(self,))
+                self.thread = threading.Timer(self.timer, Enemy_distant.wait_time, args=(self,))
                 self.thread.start()
         if self.hp <= 0:
             enemy_sprites.remove(self)
 
 
     def wait_time(self):
-        self.bullet_spawn()
+        self.spawn()
 
-    def bullet_spawn(self):
+    def spawn(self):
         Enemy_bullet(self.rect.x, self.rect.y, enemy_sprites)
 
 
@@ -125,12 +128,26 @@ class Enemy_avoid(Enemy):
         self.thread = threading.Timer(self.timeavoid, Enemy_avoid.enter_avoid, args=(self,))
         self.thread.start()
 
+
+# Враг который спавнит препятвия. Они условно обозначивают зону появления а только потом домажат
+class Enemy_Waller(Enemy_distant):
+    image = load_image("background_wall.png")
+    def __init__(self, x, y, *group):
+        super().__init__(x, y, group)
+        self.distance = 300
+        self.timer = 5.0
+
+    def spawn(self):
+        Enemy_wall(random.randint(0, 800 - self.size) + x_pos, random.randint(0, 400 - self.size) + y_pos, bullet_sprites)
+
+    def wait_time(self):
+        self.spawn()
+
 #Враг который двигается как змейка?
+#Сделать какое то визуальное обозначение. Например если враг подобрался относительно близко для атаки его углы меняют цвет
 
 
-#Враг который спавнит препятвия. Они условно обозначивают зону появления а только потом домажат
-class Enemy_Wall(Enemy):
-    pass
+
 #        v = (((200 - self.y + y_pos) ** 2 + (self.x - 400 - x_pos) ** 2) ** 0.5)
 #        cos = (self.x - 400 - x_pos) / v
 #        sin = (200 - self.y + y_pos) / v
@@ -207,6 +224,8 @@ class Enemy_bullet(pygame.sprite.Sprite):
 
     def update(self,d=Player_sprite, *args, **kwargs):
         super(Bullet_type_standart).update(self, d)
+
+
 class Bullet_through(Bullet_type_standart):
     def __init__(self):
         super().__init__()
@@ -237,22 +256,20 @@ class Bullet_through(Bullet_type_standart):
 # сделать може этот класс наследуемым т.к это будет относительно статичным обьектом
 #сделать чтоб сначала расширялась а потом уменьшалась
 #вообще стоит сделать всего 6-7 типов снарядов но добавить кучу механик. Например у проникающей пули отскок от краев экрана
+#Нужно все классы которые к игроку переснести вверх
 class Wall(pygame.sprite.Sprite):
     image = load_image("w.png")
 
-    def __init__(self, x, y, *group):
+    def __init__(self, x, y,*group):
         #если не лень сделать общую внешнюю функцию которая просто будет менять значения с true => False или наооборот
-        self.thread = threading.Timer(0.5, Wall.wait_time, args=self)
+        self.thread = threading.Timer(0.5, self.__class__.wait_time, args=self)
         self.damagemoment = True
 
         self.size = self.image.get_size()[0]
-        self.y = y
-        self.x = x
         self.hp = 5
         super().__init__(*group)
         self.image = self.__class__.image
         self.rect = self.image.get_rect()
-
         self.mask = pygame.mask.from_surface(self.image)
 
         self.rect.x = random.randint(0, 800 - self.size) + x_pos
@@ -261,8 +278,8 @@ class Wall(pygame.sprite.Sprite):
 
         self.lastpos = [0, 0]
 
-    def update(self, *args, **kwargs):
-        detected = pygame.sprite.spritecollideany(self, enemy_sprites)
+    def update(self, d=enemy_sprites, *args, **kwargs):
+        detected = pygame.sprite.spritecollideany(self, d)
         if [x_pos, y_pos] != self.lastpos:
             if x_pos != self.lastpos[0] and y_pos == self.lastpos[1]:
                 Wall.poschange(self, x=self.lastpos[0] - x_pos)
@@ -278,7 +295,7 @@ class Wall(pygame.sprite.Sprite):
             else:
                 pass
         if self.damagemoment == False and not self.thread.is_alive():
-            self.thread = threading.Timer(0.5, Bullet_type_standart.wait_time, args=(self, ))
+            self.thread = threading.Timer(0.5, self.__class__.wait_time, args=(self, ))
             self.thread.start()
 
         self.lastpos = [x_pos, y_pos]
@@ -293,6 +310,43 @@ class Wall(pygame.sprite.Sprite):
 
     def wait_time(self):
         self.timedamage = True
+
+
+class Enemy_wall(Wall):
+    image = load_image("background_wall.png")
+    def __init__(self, x, y, *group):
+        super().__init__(x, y, group)
+        self.active = False
+        self.timer = 5.0
+        self.threa = threading.Timer(self.timer, self.__class__.activate, args=(self, ))
+        self.threa.start()
+        self.damagemoment = False
+    def activate(self):
+        self.active = True
+        self.damagemoment = True
+        self.image=load_image("active_wall.png")
+
+    def update(self, d=Player_sprite, *args, **kwargs):
+        detected = pygame.sprite.spritecollideany(self, d)
+        if [x_pos, y_pos] != self.lastpos:
+            if x_pos != self.lastpos[0] and y_pos == self.lastpos[1]:
+                Wall.poschange(self, x=self.lastpos[0] - x_pos)
+            elif y_pos != self.lastpos[1] and x_pos == self.lastpos[0]:
+                Wall.poschange(self, y=self.lastpos[1] - y_pos)
+            else:
+                Wall.poschange(self, self.lastpos[0] - x_pos, self.lastpos[1] - y_pos)
+        if self.active:
+            if detected != None and self.damagemoment == True:
+                if not pygame.sprite.collide_mask(self, detected):
+                    detected.hp -= 1
+                    self.damagemoment = False
+                else:
+                    pass
+            if self.damagemoment == False and not self.thread.is_alive():
+                self.thread = threading.Timer(0.5, Bullet_type_standart.wait_time, args=(self,))
+                self.thread.start()
+
+        self.lastpos = [x_pos, y_pos]
 
 
 class remote_bullet(Bullet_type_standart):
@@ -359,7 +413,7 @@ class Gamerulers():
 #добавить штуку типо type как в person
     def spawn(self, x):
         for i in range(x):
-            Enemy_avoid(800, (random.randrange(0, 400)), enemy_sprites)
+            Enemy_Waller(800, (random.randrange(0, 400)), enemy_sprites)
             c = 0
             if c == 1:
                 pass
