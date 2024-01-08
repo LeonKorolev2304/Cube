@@ -591,7 +591,7 @@ class Cards(pygame.sprite.Sprite):
 
 
 #тут начальный набор старта игры
-type_store_player = [remote_bullet]
+type_store_player = [Bullet_type_standart]
 
 
 if __name__ == '__main__':
