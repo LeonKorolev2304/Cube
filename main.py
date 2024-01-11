@@ -485,22 +485,40 @@ class ex(pygame.sprite.Sprite):
 #Можно добавить эффекты например раз в 10 секунд бессмертие или что то подобное
 class Player(pygame.sprite.Sprite):
     global type_store_player
-    image = load_image("ff.png")
+    #  image = load_image("ff.png")
     def __init__(self):
         self.hp = 3
         super().__init__(Player_sprite)
-        self.image = Player.image
+        '''self.image = Player.image
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.x = screen.get_size()[0] / 2 - self.image.get_size()[0] / 2
-        self.rect.y = screen.get_size()[1] / 2 - self.image.get_size()[0] / 2
+        self.rect.y = screen.get_size()[1] / 2 - self.image.get_size()[0] / 2'''
+
+        self.frames = []
+        self.cut_sheet(load_image('player_run.png'), 7, 1)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
+        self.rect = self.rect.move(930, 450)
 
     def bullet_spawn(self):
         for i in type_store_player:
             #короче от лвл скейлится как и уровень способности так и колличество
             i(lvl=type_store_player.count(i))
 
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
+
     def update(self, *args, **kwargs):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
+
         #это должно быть у класса враги
         if pygame.sprite.spritecollide(self, enemy_sprites, True):
             self.hp -= 1
