@@ -6,6 +6,7 @@ import threading
 import math
 from PIL import Image
 from PIL import ImageGrab, ImageOps
+from tools import load_image, start_screen
 
 
 
@@ -24,28 +25,6 @@ enemy_sprites = pygame.sprite.Group()
 bullet_sprites = pygame.sprite.Group()
 Player_sprite = pygame.sprite.Group()
 Cards_sprite = pygame.sprite.Group()
-
-
-
-
-
-def load_image(name, colorkey=None):
-
-    fullname = os.path.join('data', name)
-    # если файл не существует, то выходим
-    if not os.path.isfile(fullname):
-        print(f"Файл с изображением '{fullname}' не найден")
-        sys.exit()
-    image = pygame.image.load(fullname)
-    if colorkey is not None:
-        image = image.convert()
-        if colorkey == -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey)
-    else:
-        image = image.convert_alpha()
-    return image
-
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -696,6 +675,7 @@ if __name__ == '__main__':
     MainPerson = Player()
     MYEVENTTYPE = pygame.USEREVENT + 1
     pygame.time.set_timer(MYEVENTTYPE, 2000)
+    start_screen(screen)
 
     while running:
         clock.tick(30)
