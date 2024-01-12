@@ -686,7 +686,7 @@ class Cards(pygame.sprite.Sprite):
 
 #тут начальный набор старта игры
 type_store_player = [remote_bullet]
-v = circle()
+#v = circle()
 
 if __name__ == '__main__':
 
