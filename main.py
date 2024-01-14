@@ -571,12 +571,16 @@ class Player(pygame.sprite.Sprite):
         self.thread = threading.Timer(0 * (i), self.__class__.waiter, args=(self, i,))
     def update(self, *args, **kwargs):
         #это должно быть у класса враги
+        font = pygame.font.Font(None, 100)
+        text = font.render(f"{self.hp} ОЗ", True, (255, 255, 255))
+        screen.blit(text, (1750, 100))
         if self.hp > 3:
             self.hp = 3
         if pygame.sprite.spritecollide(self, enemy_sprites, True):
             self.hp -= 1
         if self.hp == 0:
             pass
+
             #финальный экран
 
 
