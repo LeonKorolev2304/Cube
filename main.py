@@ -656,10 +656,10 @@ class Cards(pygame.sprite.Sprite):
 
 
 #cдесь будут выбираться все возможные карточки в виде(img, type) все остальное будет определятся при раздачи ролей
-Сard_storage = [('card_standart.png', Bullet_type_standart),
-                ('card_standart.png', Wall),
-                ('card_standart.png', remote_bullet),
-                ('card_standart.png', Bullet_through),
+Сard_storage = [('card_standart_bullet.png', Bullet_type_standart),
+                ('card_wall.png', Wall),
+                ('card_remote_bullet.png', remote_bullet),
+                ('card_bullet_through.png', Bullet_through),
                 ]
 
 
