@@ -16,8 +16,8 @@ step = 10
 clock = pygame.time.Clock()
 sp = []
 pygame.init()
-size = width, height = 1920, 1080
-screen = pygame.display.set_mode((1920, 1080))
+size = width, height = 1920, 1020
+screen = pygame.display.set_mode((width, height))
 all_sprites = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
 bullet_sprites = pygame.sprite.Group()

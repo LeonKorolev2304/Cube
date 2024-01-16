@@ -5,12 +5,11 @@ import sys
 import os
 import sqlite3
 
-# Меню (Играть, таблица лидеров, выход) Если Играть то представстесь после этого закрытие файла и запуск программы по окончанию программа выводит счет и таблицу лидеров и только кнопка вернутся
-clicked = False
+
 FPS = 50
-size = WIDTH, HEIGHT = 1920, 1080
+size = WIDTH, HEIGHT = 1920, 1020
 pygame.init()
-screen = pygame.display.set_mode((1920, 1080))
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 clock = pygame.time.Clock()
