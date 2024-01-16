@@ -6,24 +6,41 @@ import threading
 import math
 from PIL import Image
 from PIL import ImageGrab, ImageOps
-from tools import load_image, start_screen, end_screen
+import sqlite3
 
 
 x_pos = 0
 y_pos = 0
 step = 10
-pos_x = 900
-pos_y = 100
+
 clock = pygame.time.Clock()
 sp = []
 pygame.init()
-size = width, height = 1920, 1020
-screen = pygame.display.set_mode((width, height))
+size = width, height = 1920, 1080
+screen = pygame.display.set_mode((1920, 1080))
 all_sprites = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
 bullet_sprites = pygame.sprite.Group()
 Player_sprite = pygame.sprite.Group()
 Cards_sprite = pygame.sprite.Group()
+
+
+def load_image(name, colorkey=None):
+
+    fullname = os.path.join('data', name)
+    # если файл не существует, то выходим
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -35,12 +52,14 @@ class Enemy(pygame.sprite.Sprite):
         self.image = load_image(f"{self.__class__.__name__}.png")
         self.step = 5
         self.size = self.image.get_size()[0]
-        self.y = y
-        self.x = x
-        self.hp = 3
+        self.y = y - y_pos
+        self.x = x - x_pos
+        self.hp = (exp.lvl *2) + 1
         self.lasthp = self.hp
         super().__init__(enemy_sprites)
         self.rect = self.image.get_rect()
+        self.rect.x = self.x - self.size / 2 - x_pos
+        self.rect.y = self.y - self.size / 2 - y_pos
         self.damagemoment = True
         self.ex = 3
     def update(self, *args, **kwargs):
@@ -66,6 +85,18 @@ class Enemy(pygame.sprite.Sprite):
         self.damagetake = threading.Timer(0.3, self.__class__.hp_change, args=(self,))
 
 
+class Fast_Enemy(Enemy):
+    def __init__(self, x=0, y=0):
+        super().__init__(x, y)
+        self.step = 15
+        self.hp = (exp.lvl * 2) - 1
+        
+class Enemy_heavy(Enemy):
+    def __init__(self, x=0, y=0):
+        super().__init__(x, y)
+        self.step = 3
+        self.hp = (exp.lvl * 2) + 3
+
 #Сделать индикатор получения урона? Типо моргания белым спрайтом
 class Enemy_distant(Enemy):
     image = load_image("enemy_distant.png")
@@ -75,6 +106,7 @@ class Enemy_distant(Enemy):
         self.distance = 200
         self.timer = 2.0
         self.thread = threading.Timer(self.timer, self.__class__.wait_time, args=(self, ))
+
 
     def update(self, *args, **kwargs):
         self.rect.x = self.x - self.size / 2 - x_pos
@@ -130,14 +162,14 @@ class Enemy_avoid(Enemy):
 
 # Враг который спавнит препятвия. Они условно обозначивают зону появления а только потом домажат
 class Enemy_Waller(Enemy_distant):
-    image = load_image("background_wall.png")
     def __init__(self, x, y):
         super().__init__(x, y)
         self.distance = 300
         self.timer = 5.0
 
     def spawn(self):
-        Enemy_wall(random.randint(0, screen.get_size()[0] - self.size) + x_pos, random.randint(0, screen.get_size()[1] - self.size) + y_pos, bullet_sprites)
+
+        Enemy_wall(random.randint(0, screen.get_size()[0] - self.size) + x_pos, random.randint(0, screen.get_size()[1] - self.size) + y_pos)
 
     def wait_time(self):
         self.spawn()
@@ -198,11 +230,11 @@ class Bullet_type_standart(pygame.sprite.Sprite):
 
     def wait_time(self):
         self.damagemoment = True
-        self.damage = 2
 
 
     def update(self,d=enemy_sprites, *args, **kwargs):
         detected = pygame.sprite.spritecollideany(self, d)
+        #уборка пуль нунжа
 
         self.rect.x = self.x - self.size - x_pos
         self.rect.y = self.y - self.size - y_pos
@@ -253,7 +285,7 @@ class Bullet_through(Bullet_type_standart):
     def __init__(self, lvl=1):
         super().__init__()
         self.thread = threading.Timer(0.5, Bullet_type_standart.wait_time, args=self)
-
+        self.step = 15
         self.timedamage = 2
         #timedamage не используется
         self.damagemoment = True
@@ -405,6 +437,7 @@ class remote_bullet(Bullet_type_standart):
             pass
         self.y = screen.get_size()[1] / 2 + y_pos
         self.x = screen.get_size()[0] / 2 + x_pos
+        self.update()
 
 
     def update(self, *args, **kwargs):
@@ -447,7 +480,7 @@ class remote_bullet(Bullet_type_standart):
 # будет крутиться вокруг игрока изменяется колличество крутящихся штук урон
 class circle(pygame.sprite.Sprite):
     def __init__(self, lvl=1):
-        self.image = load_image('active_wall.png')
+        self.image = load_image(f'{self.__class__.__name__}.png')
         self.rect = self.image.get_rect()
         self.count = 1
         super().__init__(bullet_sprites)
@@ -457,17 +490,27 @@ class circle(pygame.sprite.Sprite):
         self.angle = 0
         self.rect.x = screen.get_size()[0] / 2 + (self.r * math.cos(self.angle))
         self.rect.y = screen.get_size()[1] / 2 + (self.r * math.sin(self.angle))
-        self.thread = threading.Timer(0.1, self.__class__.wait_time, args=(self,))
+        self.thread = threading.Timer(0.7, Bullet_type_standart.wait_time, args=self)
+        self.damagemoment = True
+        self.damage = 1
+
+
     def update(self, *args, **kwargs):
-        if not self.thread.is_alive():
-            self.thread = threading.Timer(0.0, self.__class__.wait_time, args=(self,))
+        detected = pygame.sprite.spritecollideany(self, enemy_sprites)
+        if detected != None and self.damagemoment == True and detected.damagemoment:
+            detected.hp -= 1
+            self.damagemoment = False
+
+        if self.damagemoment == False and not self.thread.is_alive():
+            self.thread = threading.Timer(0.5, Bullet_type_standart.wait_time, args=(self, ))
             self.thread.start()
+
 
         self.rect.x = (screen.get_size()[0] / 2 - 50) + (self.r * math.cos(self.angle))
         self.rect.y = (screen.get_size()[1] / 2 - 50) + (self.r * math.sin(self.angle))
+        self.angle += 0.04
 
-    def wait_time(self):
-        self.angle += 0.1
+
 
 class Tunder(pygame.sprite.Sprite):
     def __init__(self):
@@ -502,6 +545,7 @@ class floor_stuff(pygame.sprite.Sprite):
         self.pos1 = self.rect.x
         self.pos2 = self.rect.y
         self.lastpos = [0, 0]
+        self.update()
 
 
     def update(self, *args, **kwargs):
@@ -520,7 +564,7 @@ class floor_stuff(pygame.sprite.Sprite):
     def poschange(self, x=0, y=0):
         self.rect.x += x
         self.rect.y += y
-    
+
 
 class ex(pygame.sprite.Sprite):
     image = load_image('ex.png')
@@ -562,25 +606,24 @@ class Player(pygame.sprite.Sprite):
 
     def bullet_spawn(self):
         for i in range(len(type_store_player)):
+            if type_store_player[i] != circle:
+            #орбиталь будет отдельно
             #короче от лвл скейлится как и уровень способности так и колличество
-            self.thread = threading.Timer(0 * (i), self.__class__.waiter, args=(self, i, ))
-            self.thread.start()
+                self.thread = threading.Timer(0 * (i) * 10, self.__class__.waiter, args=(self, i, ))
+                self.thread.start()
     def waiter(self, i):
+
         type_store_player[i](lvl=type_store_player.count(type_store_player[i]))
-        self.thread = threading.Timer(0 * (i), self.__class__.waiter, args=(self, i,))
+        self.thread = threading.Timer(0 * (i) * 10, self.__class__.waiter, args=(self, i,))
     def update(self, *args, **kwargs):
-        #это должно быть у класса враги
-        font = pygame.font.Font(None, 100)
-        text = font.render(f"{self.hp} ОЗ", True, (255, 255, 255))
-        screen.blit(text, (1750, 100))
         if self.hp > 3:
             self.hp = 3
+        # это должно быть у класса враги
         if pygame.sprite.spritecollide(self, enemy_sprites, True):
             self.hp -= 1
         if self.hp == 0:
-            #  финальный экран
-            end_screen(screen)
-            pygame.quit()
+            pass
+            #финальный экран
 
 
 class Game():
@@ -588,19 +631,16 @@ class Game():
 
         self.create_cards = 3
 #добавить штуку типо type как в person
-    def spawn(self, x):
+    def spawn_enemy(self, x):
         for i in range(x):
-            Enemy(screen.get_size()[0], (random.randrange(0, screen.get_size()[1])))
-            floor_stuff()
-            c = 0
-            if c == 1:
-                pass
-            if c == 2:
-                pass
-            if c == 3:
-                pass
-            if c == 4:
-                pass
+            c = ((screen.get_size()[0]) * random.randint(-1, 1),
+                 (screen.get_size()[1]) * random.randint(-1, 1))
+
+            for i in enemy_store:
+                i(c[0], c[1])
+    def spawn_stuff(self):
+        floor_stuff()
+
 
     def choose(self):
         global stop_time
@@ -653,33 +693,38 @@ class Cards(pygame.sprite.Sprite):
 
     def chose(self):
         global stop_time
+        #явно эту штуку не сюда пихать но куда хз
+        if self.type == circle:
+            self.type(type_store_player.count(self.type))
         type_store_player.append(self.type)
         stop_time = False
         Cards_sprite.empty()
 
 
 #cдесь будут выбираться все возможные карточки в виде(img, type) все остальное будет определятся при раздачи ролей
-Сard_storage = [('card_standart_bullet.png', Bullet_type_standart),
-                ('card_wall.png', Wall),
-                ('card_remote_bullet.png', remote_bullet),
-                ('card_bullet_through.png', Bullet_through),
+Сard_storage = [('card_standart.png', Bullet_type_standart),
+                ('card_standart.png', Wall),
+                ('card_standart.png', remote_bullet),
+                ('card_standart.png', Bullet_through),
+                ('card_standart.png', circle)
                 ]
 
 
 #тут начальный набор старта игры
-type_store_player = [remote_bullet]
-#v = circle()
+type_store_player = [Bullet_through]
+enemy_store = [Enemy_Waller]
+last_time = 0
+time = 0
+
 
 if __name__ == '__main__':
-
     exp = ex()
     running = True
     stop_time = False
     MainPerson = Player()
     MYEVENTTYPE = pygame.USEREVENT + 1
-    pygame.time.set_timer(MYEVENTTYPE, 2000)
-    start_screen(screen)
-
+    Sec = pygame.USEREVENT + 1
+    pygame.time.set_timer(Sec, 1000)
     while running:
         clock.tick(30)
         screen.fill((0, 0, 0))
@@ -701,9 +746,9 @@ if __name__ == '__main__':
                     x_pos -= step
                 if pygame.key.get_pressed()[115]:
                     y_pos += step
-            if event.type == MYEVENTTYPE and not stop_time:
-                Game().spawn(1)
-                MainPerson.bullet_spawn()
+
+            if event.type == Sec and not stop_time:
+                time += 1
             if stop_time:
                 if event.type == pygame.MOUSEMOTION or event.type == pygame.MOUSEBUTTONDOWN:
                     Cards_sprite.update(event)
@@ -715,13 +760,19 @@ if __name__ == '__main__':
             enemy_sprites.update()
             bullet_sprites.update()
             MainPerson.update()
-
+        if last_time != time:
+            if time % 2 == 0 and not stop_time:
+                Game().spawn_enemy(1)
+                MainPerson.bullet_spawn()
+            if sum([int(i) for i in list(str(time))]) % 3 == 0:
+                Game().spawn_stuff()
         all_sprites.draw(screen)
         enemy_sprites.draw(screen)
         bullet_sprites.draw(screen)
         Player_sprite.draw(screen)
         if stop_time:
              Cards_sprite.draw(screen)
+        last_time = time
         pygame.display.flip()
 
     #короче когда мы пулькой попадаем то не удаляется из all sprites так что пока что оно класс пулек и врагов не принадлежит all sprites
