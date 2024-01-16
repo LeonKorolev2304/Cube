@@ -4,8 +4,8 @@ import sys
 import pygame
 
 FPS = 50
-WIDTH = 800
-HEIGHT = 400
+WIDTH = 1920
+HEIGHT = 1020
 
 
 def load_image(name, colorkey=None):
@@ -43,7 +43,7 @@ def start_screen(screen):
 
     fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
-    font = pygame.font.Font(None, 30)
+    font = pygame.font.Font(None, 50)
     text_coord = 50
     for line in intro_text:
         string_rendered = font.render(line, 1, pygame.Color('white'))
@@ -66,10 +66,18 @@ def start_screen(screen):
 
 
 def end_screen(screen):
-    intro_text = ["Таблица рекордов", "",
-                  "1 -",
-                  "2 -",
-                  "3 -"]
+    intro_text = ["Таблица рекордов".ljust(150, ' ') + "Статистика",
+                  "",
+                  "1 -".ljust(150, ' ') + "Убито врагов:",
+                  "2 -".ljust(150, ' ') + "Собрано опыта:",
+                  "3 -".ljust(150, ' ') + "Собрано очков здоровья:",
+                  "4 -".ljust(150, ' ') + "Получено усилителей:",
+                  "5 -",
+                  "6 -",
+                  "7 -",
+                  "8 -",
+                  "9 -",
+                  "10 -"]
 
     fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -88,8 +96,8 @@ def end_screen(screen):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return -1
-            elif event.type == pygame.KEYDOWN or \
+            '''elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
-                return 0
+                return 0'''
         pygame.display.flip()
         clock.tick(FPS)

@@ -6,8 +6,7 @@ import threading
 import math
 from PIL import Image
 from PIL import ImageGrab, ImageOps
-from tools import load_image, start_screen
-
+from tools import load_image, start_screen, end_screen
 
 
 x_pos = 0
@@ -18,8 +17,8 @@ pos_y = 100
 clock = pygame.time.Clock()
 sp = []
 pygame.init()
-size = width, height = 1920, 1080
-screen = pygame.display.set_mode((1920, 1080))
+size = width, height = 1920, 1020
+screen = pygame.display.set_mode((width, height))
 all_sprites = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
 bullet_sprites = pygame.sprite.Group()
@@ -579,9 +578,9 @@ class Player(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, enemy_sprites, True):
             self.hp -= 1
         if self.hp == 0:
-            pass
-
-            #финальный экран
+            #  финальный экран
+            end_screen(screen)
+            pygame.quit()
 
 
 class Game():
