@@ -19,7 +19,6 @@ black = (0, 0, 0)
 white = (255, 255, 255)
 btn_sprites_1 = pygame.sprite.Group()
 btn_sprites_2 = pygame.sprite.Group()
-font = pygame.font.SysFont('Constantia', 30)
 con = sqlite3.connect("data2.sqlite")
 cur = con.cursor()
 
@@ -92,7 +91,7 @@ class Button(pygame.sprite.Sprite):
     button_col = (255, 0, 0)
     hover_col = (75, 225, 255)
     click_col = (50, 150, 255)
-    tExt_col = black
+    text_col = black
     width = 260
     height = 70
 
@@ -133,8 +132,8 @@ class Button(pygame.sprite.Sprite):
                         terminate()
                     if self.typ == 4:
                         self.return_to_main()
-
-        text_img = font.render(self.text, True, self.tExt_col)
+        font = pygame.font.SysFont('Constantia', 30)
+        text_img = font.render(self.text, True, self.text_col)
         text_len = text_img.get_width()
         screen.blit(text_img, (self.x + int(self.width / 2) - int(text_len / 2), self.y + 25))
 
@@ -166,9 +165,6 @@ class Button(pygame.sprite.Sprite):
         pass
 
 
-def terminate():
-    sys.exit()
-
 
 def records_table():
     pygame.quit()
@@ -176,6 +172,8 @@ def records_table():
     c.start()
     # os.startfile('main.Exe')
 
+def terminate():
+    sys.exit()
 
 def main():
     global done, hide_inpt, hide_btn_1, input_box1
