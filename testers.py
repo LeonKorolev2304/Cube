@@ -143,8 +143,6 @@ class Button(pygame.sprite.Sprite):
         global hide_inpt, hide_btn_1
         hide_inpt = False
         hide_btn_1 = True
-        os.startfile('main.Exe')
-        sys.exit()
 
     def gg(self):
         self.text = self.text
