@@ -134,7 +134,6 @@ class Button(pygame.sprite.Sprite):
                         terminate()
                     if self.typ == 4:
                         self.return_to_main()
-        font = pygame.font.SysFont('Constantia', 30)
         text_img = font.render(self.text, True, self.text_col)
         text_len = text_img.get_width()
         screen.blit(text_img, (self.x + int(self.width / 2) - int(text_len / 2), self.y + 25))
