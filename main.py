@@ -740,7 +740,7 @@ def terminate():
 
 
 # cдесь будут выбираться все возможные карточки в виде(img, typ) все остальное будет определятся при раздачи ролей
-Card_storage = [('card_standart.png', Bullettypstandart),
+Card_storage = [('card_standart_bullet.png', Bullettypstandart),
                 ('card_Wall.png', Wall),
                 ('card_Remotebullet.png', Remotebullet),
                 ('card_Bulletthrough.png', Bulletthrough),
