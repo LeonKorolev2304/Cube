@@ -22,6 +22,7 @@ btn_sprites_1 = pygame.sprite.Group()
 btn_sprites_2 = pygame.sprite.Group()
 con = sqlite3.connect("data2.sqlite")
 cur = con.cursor()
+pygame.init()
 
 
 def load_image(name, colorkey=None):
