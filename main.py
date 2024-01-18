@@ -741,10 +741,10 @@ def terminate():
 
 # cдесь будут выбираться все возможные карточки в виде(img, typ) все остальное будет определятся при раздачи ролей
 Card_storage = [('card_standart.png', Bullettypstandart),
-                ('card_standart.png', Wall),
-                ('card_standart.png', Remotebullet),
-                ('card_standart.png', Bulletthrough),
-                ('card_standart.png', Circle)
+                ('card_Wall.png', Wall),
+                ('card_Remotebullet.png', Remotebullet),
+                ('card_Bulletthrough.png', Bulletthrough),
+                ('card_Circle.png', Circle)
                 ]
 
 # тут начальный набор старта игры
