@@ -1,4 +1,5 @@
 import threading
+import threading
 import pygame
 import sys
 import os
@@ -13,16 +14,15 @@ screen = pygame.display.set_mode((1920, 1080))
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 clock = pygame.time.Clock()
+font = pygame.font.SysFont('Times New Roman', 30)
 bg = (204, 102, 0)
 red = (255, 0, 0)
 black = (0, 0, 0)
-font = pygame.font.SysFont('arial', 30)
 white = (255, 255, 255)
 btn_sprites_1 = pygame.sprite.Group()
 btn_sprites_2 = pygame.sprite.Group()
 con = sqlite3.connect("data2.sqlite")
 cur = con.cursor()
-pygame.init()
 
 
 def load_image(name, colorkey=None):
@@ -134,7 +134,7 @@ class Button(pygame.sprite.Sprite):
                         terminate()
                     if self.typ == 4:
                         self.return_to_main()
-        font = pygame.font.SysFont('arial', 30)
+        font = pygame.font.SysFont('calibri', 30)
         text_img = font.render(self.text, True, self.text_col)
         text_len = text_img.get_width()
         screen.blit(text_img, (self.x + int(self.width / 2) - int(text_len / 2), self.y + 25))
@@ -228,5 +228,5 @@ def main():
 
 
 if __name__ == '__main__':
-    print(pygame.font.get_fonts())
+    pygame.init()
     main()
