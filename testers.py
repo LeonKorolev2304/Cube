@@ -178,6 +178,8 @@ def terminate():
     sys.exit()
 
 def main():
+    pygame.init()
+    pygame.font.init()
     global done, hide_inpt, hide_btn_1, input_box1
     hide_btn_1 = False
     hide_inpt = True
