@@ -43,6 +43,7 @@ def main_table():
     global done
     clock = pygame.time.Clock()
     done = False
+    quit = Button(screen.get_size()[0] / 2 - 90, (screen.get_size()[1] / 3) * 2, 'Return', typ=5, group=btn_sprites_2)
     while not done:
         screen.fill((30, 30, 30))
         btn_sprites_1_1.draw(screen)
@@ -72,17 +73,22 @@ def main_table():
         screen.blit(text_img5, ((screen.get_size()[0] / 3 * 2), screen.get_size()[1] / 10 * 4))
         screen.blit(text_img6, (screen.get_size()[0] / 3 * 2 - 100, screen.get_size()[1] / 10 * 5))
         screen.blit(text_img7, (screen.get_size()[0] / 3 * 2, screen.get_size()[1] / 10 * 5))
-        Button(screen.get_size()[0] / 2 - 90, (screen.get_size()[1] / 3) * 2, 'Return', typ=2,
-               group=btn_sprites_2)
+        btn_sprites_2.draw(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
+                pygame.quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                btn_sprites_2.update(event)
+        btn_sprites_2.update()
+        #screen.blit(text_img5, (screen.get_size()[0] / 2, 300))
         for i in range(n):
             text_img = font.render(' '.join(list(map(lambda x: str(x), list(results[i])[1:]))), True, text_col)
+            text_len = text_img.get_width()
             screen.blit(text_img, (screen.get_size()[0] / 3, screen.get_size()[1] / 10 * (i + 4)))
-        btn_sprites_2.draw(screen)
-        btn_sprites_2.update()
         pygame.display.flip()
 
         clock.tick(30)
     pygame.quit()
-
 
 main_table()

@@ -1,10 +1,9 @@
 import threading
-import threading
 import pygame
 import sys
 import os
 import sqlite3
-
+import time
 # только кнопка вернутся
 clicked = False
 FPS = 50
@@ -14,7 +13,7 @@ screen = pygame.display.set_mode((1920, 1080))
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 clock = pygame.time.Clock()
-pygame.font.Font('MonaspaceXenon-Bold.otf', 36)
+font = pygame.font.SysFont('Times New Roman', 30)
 bg = (204, 102, 0)
 red = (255, 0, 0)
 black = (0, 0, 0)
@@ -46,7 +45,7 @@ class InputBox:
     def __init__(self, x, y, w, h, text=''):
         self.rect = pygame.Rect(x, y, w, h)
         self.color = COLOR_INACTIVE
-        self.tExt = text
+        self.text = text
         self.txt_surface = FONT.render(text, True, self.color)
         self.active = False
 
@@ -64,23 +63,23 @@ class InputBox:
             if event.type == pygame.KEYDOWN:
                 if self.active:
                     if event.key == pygame.K_RETURN:
-                        print(self.tExt)
-                        self.tExt = ''
+                        print(self.text)
+                        self.text = ''
                     elif event.key == pygame.K_BACKSPACE:
-                        self.tExt = self.tExt[:-1]
+                        self.text = self.text[:-1]
                     else:
-                        self.tExt += event.unicode
-                    # Re-render the tExt.
-                    self.txt_surface = FONT.render(self.tExt, True, self.color)
+                        self.text += event.unicode
+                    # Re-render the text.
+                    self.txt_surface = FONT.render(self.text, True, self.color)
 
     def update(self):
-        # Resize the box if the tExt is too long.
+        # Resize the box if the text is too long.
         if self.rect.w <= 260:
             width = max(self.rect[2], self.txt_surface.get_width() + 10)
             self.rect.w = width
 
     def draw(self, sreen):
-        # Blit the tExt.
+        # Blit the text.
         sreen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
         # Blit the rect.
         pygame.draw.rect(sreen, self.color, self.rect, 2)
@@ -114,27 +113,29 @@ class Button(pygame.sprite.Sprite):
             print(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN:
                 if args and self.rect.collidepoint(args[0].pos):
+                    print('12123')
                     if self.typ == 1:
                         self.play()
                     if self.typ == 2:
                         self.back()
-                    if self.typ == 4 and input_box1.tExt != '':
+                    if self.typ == 4 and input_box1.text != '':
                         con.execute(f"""INSERT INTO [table] (
                         score,
                         nickname
                     )
                     VALUES (
                         '0',
-                        '{input_box1.tExt}'
+                        '{input_box1.text}'
                     );""").fetchall()
 
                         self.final_play()
                         con.commit()
                     if self.typ == 3:
                         terminate()
-                    if self.typ == 4:
+                    if self.typ == 5:
                         self.return_to_main()
-        font = pygame.font.SysFont('calibri', 30)
+        pygame.font.Font(pygame.font.match_font('verdana', 36))
+        #pygame.font.Font('/адрес/Arial.ttf', 36)
         text_img = font.render(self.text, True, self.text_col)
         text_len = text_img.get_width()
         screen.blit(text_img, (self.x + int(self.width / 2) - int(text_len / 2), self.y + 25))
@@ -164,7 +165,10 @@ class Button(pygame.sprite.Sprite):
         hide_btn_1 = False
 
     def return_to_main(self):
-        pass
+        self.text = self.text
+        os.startfile('testers.exe')
+        time.sleep(1)
+        sys.exit()
 
 
 
@@ -202,8 +206,7 @@ def main():
                 box.handle_event(event)
 
             if event.type == pygame.QUIT:
-                done = True
-                pygame.quit()
+                sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN and not hide_btn_1:
                 btn_sprites_1.update(event)

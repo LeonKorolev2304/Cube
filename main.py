@@ -4,6 +4,7 @@ import sys
 import os
 import threading
 import math
+import time
 from PIL import Image
 from PIL import ImageOps
 import sqlite3
@@ -642,14 +643,17 @@ class Player(pygame.sprite.Sprite):
             n = cur.execute(f"""SELECT MAX(id)
               FROM [table]""").fetchall()[0][0]
             cur.execute(f"""UPDATE [table]
-   SET score = '{self.score * time}'
+   SET score = '{self.score * times}'
  WHERE id = {n};""").fetchall()
             con.commit()
-            c = threading.Timer(1.0, terminate)
-            c.start()
-            terminate()
-            # финальный экран
+            os.startfile('try.exe')
+            time.sleep(1)
 
+            sys.exit()
+
+def terminate(self):
+    self.hp = self.hp
+    sys.exit()
 
 class Game:
     def __init__(self):
@@ -735,30 +739,26 @@ class Cards(pygame.sprite.Sprite):
         Cards_sprite.empty()
 
 
-def terminate():
-    pygame.quit()
-
-
 # cдесь будут выбираться все возможные карточки в виде(img, typ) все остальное будет определятся при раздачи ролей
-Card_storage = [('card_standart_bullet.png', Bullettypstandart),
-                ('card_Wall.png', Wall),
-                ('card_Remotebullet.png', Remotebullet),
-                ('card_Bulletthrough.png', Bulletthrough),
-                ('card_Circle.png', Circle)
+Card_storage = [('card_standart.png', Bullettypstandart),
+                ('card_standart.png', Wall),
+                ('card_standart.png', Remotebullet),
+                ('card_standart.png', Bulletthrough),
+                ('card_standart.png', Circle)
                 ]
 
 # тут начальный набор старта игры
-typ_store_player = [Bullettypstandart]
+typ_store_player = [Bulletthrough]
 Enemy_store = [Enemy]
 last_time = 0
-time = 0
+times = 0
 
 if __name__ == '__main__':
     Exp = Ex()
     running = True
     stop_time = False
     MainPerson = Player()
-    MYEVENTtyp = pygame.USEREVENT + 1
+    MYEVENTTYPE = pygame.USEREVENT + 1
     Sec = pygame.USEREVENT + 1
     pygame.time.set_timer(Sec, 1000)
     while running:
@@ -784,7 +784,7 @@ if __name__ == '__main__':
                     y_pos += step
 
             if event.type == Sec and not stop_time:
-                time += 1
+                times += 1
             if stop_time:
                 if event.type == pygame.MOUSEMOTION or event.type == pygame.MOUSEBUTTONDOWN:
                     Cards_sprite.update(event)
@@ -796,21 +796,21 @@ if __name__ == '__main__':
             Enemy_sprites.update()
             bullet_sprites.update()
             MainPerson.update()
-        if last_time != time:
-            if time % 2 == 0 and not stop_time:
+        if last_time != times:
+            if times % 2 == 0 and not stop_time:
                 Game().spawnenemy(1)
                 MainPerson.bullet_spawn()
-            if time == 10:
+            if times == 10:
                 adder = Fastenemy
-            if time == 40:
+            if times == 40:
                 adder = Enemyheavy
-            if time == 100:
+            if times == 100:
                 adder = Enemywaller
-            if time == 140:
+            if times == 140:
                 adder = Enemydistant
-            if time == 180:
+            if times == 180:
                 adder = Enemyavoid
-            if sum([int(i) for i in list(str(time))]) % 3 == 0:
+            if sum([int(i) for i in list(str(times))]) % 3 == 0:
                 Game().spawn_stuff()
         all_sprites.draw(screen)
         Enemy_sprites.draw(screen)
@@ -818,7 +818,7 @@ if __name__ == '__main__':
         Player_sprite.draw(screen)
         if stop_time:
             Cards_sprite.draw(screen)
-        last_time = time
+        last_time = times
         pygame.display.flip()
     # короче когда мы пулькой попадаем то не удаляется из all sprites так что пока
     # что оно класс пулек и врагов не принадлежит all sprites
