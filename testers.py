@@ -63,7 +63,6 @@ class InputBox:
             if event.type == pygame.KEYDOWN:
                 if self.active:
                     if event.key == pygame.K_RETURN:
-                        print(self.text)
                         self.text = ''
                     elif event.key == pygame.K_BACKSPACE:
                         self.text = self.text[:-1]
@@ -110,10 +109,8 @@ class Button(pygame.sprite.Sprite):
     def update(self, *args):
         global clicked
         if args != ():
-            print(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN:
                 if args and self.rect.collidepoint(args[0].pos):
-                    print('12123')
                     if self.typ == 1:
                         self.play()
                     if self.typ == 2:
@@ -134,7 +131,10 @@ class Button(pygame.sprite.Sprite):
                         terminate()
                     if self.typ == 5:
                         self.return_to_main()
-        pygame.font.Font(pygame.font.match_font('verdana', 36))
+        try:
+            pygame.font.Font(pygame.font.match_font('verdana', 36), 4)
+        except BaseException:
+            pass
         #pygame.font.Font('/адрес/Arial.ttf', 36)
         text_img = font.render(self.text, True, self.text_col)
         text_len = text_img.get_width()
@@ -160,7 +160,6 @@ class Button(pygame.sprite.Sprite):
     def back(self):
         self.text = self.text
         global hide_inpt, hide_btn_1
-        print(hide_inpt, hide_btn_1)
         hide_inpt = True
         hide_btn_1 = False
 
@@ -168,7 +167,7 @@ class Button(pygame.sprite.Sprite):
         self.text = self.text
         os.startfile('testers.exe')
         time.sleep(1)
-        sys.exit()
+        terminate()
 
 
 
@@ -211,7 +210,10 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN and not hide_btn_1:
                 btn_sprites_1.update(event)
             if event.type == pygame.MOUSEBUTTONDOWN and hide_btn_1:
-                btn_sprites_2.update(event)
+                try:
+                    btn_sprites_2.update(event)
+                except BaseException:
+                    pass
 
         if not hide_inpt:
             for box in input_boxes:
@@ -232,4 +234,7 @@ def main():
 
 if __name__ == '__main__':
     pygame.init()
-    main()
+    try:
+        main()
+    except BaseException:
+        pass

@@ -97,7 +97,7 @@ class Fastenemy(Enemy):
     def __init__(self, x=0, y=0):
         super().__init__(x, y)
         self.step = 15
-        self.hp = (Exp.lvl * 2) - 1
+        self.hp = (Exp.lvl * 1) - 1
 
 
 class Enemyheavy(Enemy):
@@ -651,9 +651,11 @@ class Player(pygame.sprite.Sprite):
 
             sys.exit()
 
+
 def terminate(self):
     self.hp = self.hp
     sys.exit()
+
 
 class Game:
     def __init__(self):
@@ -800,6 +802,7 @@ if __name__ == '__main__':
             if times % 2 == 0 and not stop_time:
                 Game().spawnenemy(1)
                 MainPerson.bullet_spawn()
+            adder = ''
             if times == 10:
                 adder = Fastenemy
             if times == 40:
@@ -810,6 +813,8 @@ if __name__ == '__main__':
                 adder = Enemydistant
             if times == 180:
                 adder = Enemyavoid
+            if adder != '':
+                Enemy_store.append(adder)
             if sum([int(i) for i in list(str(times))]) % 3 == 0:
                 Game().spawn_stuff()
         all_sprites.draw(screen)
