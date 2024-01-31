@@ -29,13 +29,12 @@ n = cur.execute(f"""SELECT MAX(id)
 results = cur.execute(f"""SELECT *
   FROM [table]
 ORDER BY score""").fetchall()[::-1]
-print(n)
 player = cur.execute(f"""SELECT score,
        nickname
   FROM [table]
  WHERE id = {n};""").fetchall()[0]
 print(player)
-print(results)
+results = list(sorted(results, key=lambda x: int(x[1]), reverse=True))
 print((list(results[0])[1]))
 
 

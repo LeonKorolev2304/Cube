@@ -81,7 +81,7 @@ class Enemy(pygame.sprite.Sprite):
         self.y = self.y + sin * self.step
         if self.hp <= 0:
             Exp.update_ex(self.Ex)
-            Enemy_sprites.remove(self)
+            self.kill()
 
         if self.hp != self.lasthp and not self.damagetake.is_alive():
             self.lasthp = self.hp
@@ -132,7 +132,7 @@ class Enemydistant(Enemy):
                 self.thread = threading.Timer(self.timer, Enemydistant.wait_time, args=(self,))
                 self.thread.start()
         if self.hp <= 0:
-            Enemy_sprites.remove(self)
+            self.kill()
 
         if self.hp != self.lasthp and not self.damagetake.is_alive():
             self.lasthp = self.hp
@@ -247,6 +247,7 @@ class Bullettypstandart(pygame.sprite.Sprite):
 
     def update(self, d=Enemy_sprites, c=1, *args, **kwargs):
         detected = pygame.sprite.spritecollideany(self, d)
+        detected: d
         # уборка пуль нунжа
 
         self.rect.x = self.x - self.size - x_pos
@@ -256,7 +257,7 @@ class Bullettypstandart(pygame.sprite.Sprite):
 
         if (detected is not None) and detected.damagemoment:
             detected.hp -= self.damage
-            bullet_sprites.remove(self)
+            self.kill()
             # возможно сделать сдесь скорость наложение скилов
 
         if self.lvl == 3:
@@ -292,6 +293,7 @@ class Enemybullet(pygame.sprite.Sprite):
 
     def update(self, d=Player_sprite, *args, **kwargs):
         detected = pygame.sprite.spritecollideany(self, d)
+        detected: d
         # уборка пуль нунжа
 
         self.rect.x = self.x - self.size - x_pos
@@ -301,7 +303,7 @@ class Enemybullet(pygame.sprite.Sprite):
 
         if (detected is not None) and detected.damagemoment:
             detected.hp -= self.damage
-            bullet_sprites.remove(self)
+            self.kill()
 
 
 class Bulletthrough(Bullettypstandart):
@@ -315,6 +317,7 @@ class Bulletthrough(Bullettypstandart):
 
     def update(self, *args, **kwargs):
         detected = pygame.sprite.spritecollideany(self, Enemy_sprites)
+        detected: Enemy_sprites
         self.rect.x = self.x - self.size - x_pos
         self.rect.y = self.y - self.size - y_pos
         self.x += self.vx
@@ -372,6 +375,7 @@ class Wall(pygame.sprite.Sprite):
 
     def update(self, d=Enemy_sprites, *args, **kwargs):
         detected = pygame.sprite.spritecollideany(self, d)
+        detected: d
         if [x_pos, y_pos] != self.lastpos:
             Wall.poschange(self, self.lastpos[0] - x_pos, self.lastpos[1] - y_pos)
 
@@ -408,7 +412,7 @@ class Wall(pygame.sprite.Sprite):
         self.damagemoment = True
 
     def dellit(self):
-        bullet_sprites.remove(self)
+        self.kill()
 
 
 class Enemywall(Wall):
@@ -422,6 +426,7 @@ class Enemywall(Wall):
 
     def activate(self):
         detected = pygame.sprite.spritecollideany(self, Player_sprite)
+        detected: Player_sprite
         if [x_pos, y_pos] != self.lastpos:
             Wall.poschange(self, self.lastpos[0] - x_pos, self.lastpos[1] - y_pos)
 
@@ -476,6 +481,7 @@ class Remotebullet(Bullettypstandart):
             self.poschange((self.lastpos[0] - x_pos), (self.lastpos[1] - y_pos))
             self.lastpos = [x_pos, y_pos]
         detected = pygame.sprite.spritecollideany(self, Enemy_sprites)
+        detected: Enemy_sprites
         self.mx, self.my = pygame.mouse.get_pos()
         rel_x, rel_y = self.mx - self.x, self.my - self.y
 
@@ -493,7 +499,7 @@ class Remotebullet(Bullettypstandart):
 
         if detected is not None and detected.damagemoment:
             detected.hp -= self.damage
-            bullet_sprites.remove(self)
+            self.kill()
             if self.lvl == 3:
                 Wall(self.x - 50, self.y - 50, lvl=0)
 
@@ -522,6 +528,7 @@ class Circle(pygame.sprite.Sprite):
 
     def update(self, *args, **kwargs):
         detected = pygame.sprite.spritecollideany(self, Enemy_sprites)
+        detected: Enemy_sprites
         if detected is not None and self.damagemoment and detected.damagemoment:
             detected.hp -= 1
             self.damagemoment = False
@@ -568,7 +575,7 @@ class Floorstuff(pygame.sprite.Sprite):
                 MainPerson.hp += 1
             else:
                 Exp.update_ex(1)
-            bullet_sprites.remove(self)
+            self.kill()
         self.lastpos = [x_pos, y_pos]
 
     def poschange(self, x=0, y=0):
@@ -750,7 +757,7 @@ Card_storage = [('card_standart_bullet.png', Bullettypstandart),
                 ]
 
 # тут начальный набор старта игры
-typ_store_player = [Bulletthrough]
+typ_store_player = [Bullettypstandart]
 Enemy_store = [Enemy]
 last_time = 0
 times = 0
